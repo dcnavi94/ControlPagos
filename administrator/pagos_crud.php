@@ -1,7 +1,12 @@
 <?php
 // pagos_crud.php
-
-require_once 'db_connection.php';
+session_start();
+// Verifica que el usuario esté autenticado y sea administrador
+if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] != 'administrador') {
+    header("Location: ../login/login.php");
+    exit;
+}
+require_once '../db_connection.php';
 
 $error_message   = "";
 $success_message = "";
@@ -19,108 +24,6 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id_pag
     }
     header("Location: pagos_crud.php");
     exit;
-}
-
-// ------------------------
-// Procesar edición (mostrar formulario para editar pago)
-// ------------------------
-if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['id_pago'])) {
-    $id_pago = intval($_GET['id_pago']);
-    $sqlPago = "SELECT * FROM pagos WHERE id_pago = $id_pago";
-    $resultPago = mysqli_query($conn, $sqlPago);
-    if (!$resultPago || mysqli_num_rows($resultPago) == 0) {
-        $error_message = "Pago no encontrado.";
-    } else {
-        $pago = mysqli_fetch_assoc($resultPago);
-        // Procesar actualización cuando se envía el formulario de edición
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizar'])) {
-            $id_usuario = intval($_POST['id_usuario']);
-            $concepto = mysqli_real_escape_string($conn, $_POST['concepto']);
-            $monto = floatval($_POST['monto']);
-            $fecha_vencimiento = mysqli_real_escape_string($conn, $_POST['fecha_vencimiento']);
-            $estado = mysqli_real_escape_string($conn, $_POST['estado']);
-            
-            $sqlUpdate = "UPDATE pagos SET 
-                          id_usuario = $id_usuario,
-                          concepto = '$concepto',
-                          monto = $monto,
-                          fecha_vencimiento = '$fecha_vencimiento',
-                          estado = '$estado'
-                          WHERE id_pago = $id_pago";
-            if (mysqli_query($conn, $sqlUpdate)) {
-                $success_message = "Pago actualizado correctamente.";
-                header("Location: pagos_crud.php");
-                exit;
-            } else {
-                $error_message = "Error al actualizar pago: " . mysqli_error($conn);
-            }
-        }
-        // Consultar alumnos para llenar el select
-        $sqlUsuarios = "SELECT id_usuario, nombre, apellido FROM usuarios WHERE rol = 'alumno'";
-        $resultUsuarios = mysqli_query($conn, $sqlUsuarios);
-        ?>
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-          <meta charset="UTF-8">
-          <title>Editar Pago - Ciencias Artes y Metaeducación San José</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <!-- Bootstrap CSS -->
-          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-          <!-- CSS Personalizado -->
-          <link rel="stylesheet" href="styles.css">
-        </head>
-        <body>
-          <?php include 'menu.php'; ?>
-          <div class="container mt-4">
-            <h2 class="mb-4">Editar Pago</h2>
-            <?php if ($error_message): ?>
-              <div class="alert alert-danger"><?php echo $error_message; ?></div>
-            <?php endif; ?>
-            <form action="pagos_crud.php?action=edit&id_pago=<?php echo $id_pago; ?>" method="POST">
-              <div class="mb-3">
-                <label for="id_usuario" class="form-label">Estudiante</label>
-                <select name="id_usuario" class="form-select" required>
-                  <option value="">Seleccione un estudiante</option>
-                  <?php while ($rowUsuario = mysqli_fetch_assoc($resultUsuarios)): ?>
-                    <option value="<?php echo $rowUsuario['id_usuario']; ?>" <?php if($rowUsuario['id_usuario'] == $pago['id_usuario']) echo 'selected'; ?>>
-                      <?php echo htmlspecialchars($rowUsuario['nombre'] . ' ' . $rowUsuario['apellido']); ?>
-                    </option>
-                  <?php endwhile; ?>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="concepto" class="form-label">Concepto</label>
-                <input type="text" name="concepto" class="form-control" value="<?php echo htmlspecialchars($pago['concepto']); ?>" required>
-              </div>
-              <div class="mb-3">
-                <label for="monto" class="form-label">Monto</label>
-                <input type="number" step="0.01" name="monto" class="form-control" value="<?php echo htmlspecialchars($pago['monto']); ?>" required>
-              </div>
-              <div class="mb-3">
-                <label for="fecha_vencimiento" class="form-label">Fecha de Vencimiento</label>
-                <input type="date" name="fecha_vencimiento" class="form-control" value="<?php echo htmlspecialchars($pago['fecha_vencimiento']); ?>" required>
-              </div>
-              <div class="mb-3">
-                <label for="estado" class="form-label">Estado</label>
-                <select name="estado" class="form-select" required>
-                  <option value="pendiente" <?php if($pago['estado'] == 'pendiente') echo 'selected'; ?>>Pendiente</option>
-                  <option value="pagado" <?php if($pago['estado'] == 'pagado') echo 'selected'; ?>>Pagado</option>
-                  <option value="vencido" <?php if($pago['estado'] == 'vencido') echo 'selected'; ?>>Vencido</option>
-                </select>
-              </div>
-              <button type="submit" name="actualizar" class="btn btn-warning">Actualizar Pago</button>
-              <a href="pagos_crud.php" class="btn btn-secondary">Cancelar</a>
-            </form>
-          </div>
-          <?php include 'footer.php'; ?>
-          <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-          <script src="script.js"></script>
-        </body>
-        </html>
-        <?php
-        exit;
-    }
 }
 
 // ------------------------
@@ -142,11 +45,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar'])) {
     }
 }
 
+// ------------------------
+// Procesar actualización de pago
+// ------------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizar'])) {
+    $id_pago = intval($_POST['id_pago']);
+    $id_usuario = intval($_POST['id_usuario']);
+    $concepto = mysqli_real_escape_string($conn, $_POST['concepto']);
+    $monto = floatval($_POST['monto']);
+    $fecha_vencimiento = mysqli_real_escape_string($conn, $_POST['fecha_vencimiento']);
+    $estado = mysqli_real_escape_string($conn, $_POST['estado']);
+    
+    $sqlUpdate = "UPDATE pagos SET 
+                  id_usuario = $id_usuario,
+                  concepto = '$concepto',
+                  monto = $monto,
+                  fecha_vencimiento = '$fecha_vencimiento',
+                  estado = '$estado'
+                  WHERE id_pago = $id_pago";
+    if (mysqli_query($conn, $sqlUpdate)) {
+        $success_message = "Pago actualizado correctamente.";
+    } else {
+        $error_message = "Error al actualizar pago: " . mysqli_error($conn);
+    }
+}
+
 // Consulta para listar todos los pagos
 $sqlPagos = "SELECT p.*, u.nombre AS nombre_usuario, u.apellido AS apellido_usuario 
              FROM pagos p
              LEFT JOIN usuarios u ON p.id_usuario = u.id_usuario";
 $resultPagos = mysqli_query($conn, $sqlPagos);
+
+// Consultar alumnos para llenar el select
+$sqlUsuarios = "SELECT id_usuario, nombre, apellido FROM usuarios WHERE rol = 'alumno'";
+$resultUsuarios = mysqli_query($conn, $sqlUsuarios);
+
+// Obtener datos del pago a editar si se está en modo edición
+$pago = null;
+if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['id_pago'])) {
+    $id_pago = intval($_GET['id_pago']);
+    $sqlPago = "SELECT * FROM pagos WHERE id_pago = $id_pago";
+    $resultPago = mysqli_query($conn, $sqlPago);
+    if ($resultPago && mysqli_num_rows($resultPago) > 0) {
+        $pago = mysqli_fetch_assoc($resultPago);
+    } else {
+        $error_message = "Pago no encontrado.";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -158,7 +103,7 @@ $resultPagos = mysqli_query($conn, $sqlPagos);
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- CSS Personalizado -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
   <!-- Incluir menú -->
@@ -175,23 +120,22 @@ $resultPagos = mysqli_query($conn, $sqlPagos);
       <div class="alert alert-success"><?php echo $success_message; ?></div>
     <?php endif; ?>
     
-    <!-- Formulario para insertar un nuevo pago -->
+    <!-- Formulario para insertar o editar un pago -->
     <div class="card mb-4">
       <div class="card-header">
-        Insertar Nuevo Pago
+        <?php echo $pago ? 'Editar Pago' : 'Insertar Nuevo Pago'; ?>
       </div>
       <div class="card-body">
-        <form action="pagos_crud.php" method="POST">
+        <form action="pagos_crud.php<?php echo $pago ? '?action=edit&id_pago=' . $pago['id_pago'] : ''; ?>" method="POST">
+          <?php if ($pago): ?>
+            <input type="hidden" name="id_pago" value="<?php echo $pago['id_pago']; ?>">
+          <?php endif; ?>
           <div class="mb-3">
             <label for="id_usuario" class="form-label">Estudiante</label>
             <select name="id_usuario" class="form-select" required>
               <option value="">Seleccione un estudiante</option>
-              <?php 
-              // Consultar usuarios con rol alumno
-              $sqlUsuarios = "SELECT id_usuario, nombre, apellido FROM usuarios WHERE rol = 'alumno'";
-              $resultUsuarios = mysqli_query($conn, $sqlUsuarios);
-              while ($rowUsuario = mysqli_fetch_assoc($resultUsuarios)): ?>
-                <option value="<?php echo $rowUsuario['id_usuario']; ?>">
+              <?php while ($rowUsuario = mysqli_fetch_assoc($resultUsuarios)): ?>
+                <option value="<?php echo $rowUsuario['id_usuario']; ?>" <?php if ($pago && $rowUsuario['id_usuario'] == $pago['id_usuario']) echo 'selected'; ?>>
                   <?php echo htmlspecialchars($rowUsuario['nombre'] . ' ' . $rowUsuario['apellido']); ?>
                 </option>
               <?php endwhile; ?>
@@ -199,25 +143,28 @@ $resultPagos = mysqli_query($conn, $sqlPagos);
           </div>
           <div class="mb-3">
             <label for="concepto" class="form-label">Concepto</label>
-            <input type="text" name="concepto" class="form-control" placeholder="Ej. colegiatura, inscripción, etc." required>
+            <input type="text" name="concepto" class="form-control" value="<?php echo $pago ? htmlspecialchars($pago['concepto']) : ''; ?>" required>
           </div>
           <div class="mb-3">
             <label for="monto" class="form-label">Monto</label>
-            <input type="number" step="0.01" name="monto" class="form-control" required>
+            <input type="number" step="0.01" name="monto" class="form-control" value="<?php echo $pago ? htmlspecialchars($pago['monto']) : ''; ?>" required>
           </div>
           <div class="mb-3">
             <label for="fecha_vencimiento" class="form-label">Fecha de Vencimiento</label>
-            <input type="date" name="fecha_vencimiento" class="form-control" required>
+            <input type="date" name="fecha_vencimiento" class="form-control" value="<?php echo $pago ? htmlspecialchars($pago['fecha_vencimiento']) : ''; ?>" required>
           </div>
           <div class="mb-3">
             <label for="estado" class="form-label">Estado</label>
             <select name="estado" class="form-select" required>
-              <option value="pendiente">Pendiente</option>
-              <option value="pagado">Pagado</option>
-              <option value="vencido">Vencido</option>
+              <option value="pendiente" <?php if ($pago && $pago['estado'] == 'pendiente') echo 'selected'; ?>>Pendiente</option>
+              <option value="pagado" <?php if ($pago && $pago['estado'] == 'pagado') echo 'selected'; ?>>Pagado</option>
+              <option value="vencido" <?php if ($pago && $pago['estado'] == 'vencido') echo 'selected'; ?>>Vencido</option>
             </select>
           </div>
-          <button type="submit" name="guardar" class="btn btn-primary">Guardar Pago</button>
+          <button type="submit" name="<?php echo $pago ? 'actualizar' : 'guardar'; ?>" class="btn btn-primary"><?php echo $pago ? 'Actualizar Pago' : 'Guardar Pago'; ?></button>
+          <?php if ($pago): ?>
+            <a href="pagos_crud.php" class="btn btn-secondary">Cancelar</a>
+          <?php endif; ?>
         </form>
       </div>
     </div>
@@ -263,11 +210,11 @@ $resultPagos = mysqli_query($conn, $sqlPagos);
   </div>
   
   <!-- Incluir footer -->
-  <?php include 'footer.php'; ?>
+  <?php include '../footer.php'; ?>
   
   <!-- Bootstrap JS Bundle (incluye Popper) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Archivo JavaScript personalizado -->
-  <script src="script.js"></script>
+  <script src="../js/script.js"></script>
 </body>
 </html>

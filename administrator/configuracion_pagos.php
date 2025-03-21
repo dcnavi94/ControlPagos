@@ -1,6 +1,12 @@
 <?php
+session_start();
+// Verifica que el usuario esté autenticado y sea alumno
+if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] != 'administrador') {
+    header("Location: ../login/login.php");
+    exit;
+}
 // configuracion_pagos.php
-require_once 'db_connection.php';
+require_once '../db_connection.php';
 
 $error_message   = "";
 $success_message = "";
@@ -55,7 +61,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['nivel'])
           <title>Editar Configuración de Pagos - Ciencias Artes y Metaeducación San José</title>
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-          <link rel="stylesheet" href="styles.css">
+          <link rel="stylesheet" href="../css/styles.css">
         </head>
         <body>
           <?php include 'menu.php'; ?>
@@ -64,26 +70,11 @@ if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['nivel'])
             <?php if ($error_message): ?>
               <div class="alert alert-danger"><?php echo $error_message; ?></div>
             <?php endif; ?>
-            <form action="configuracion_pagos.php?action=edit&nivel=<?php echo $nivel; ?>&tiene_beca=<?php echo $tiene_beca; ?>" method="POST">
-              <div class="mb-3">
-                <label class="form-label">Nivel</label>
-                <input type="text" class="form-control" value="<?php echo htmlspecialchars($nivel); ?>" disabled>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Tiene Beca</label>
-                <input type="text" class="form-control" value="<?php echo $tiene_beca ? 'Sí' : 'No'; ?>" disabled>
-              </div>
-              <div class="mb-3">
-                <label for="monto" class="form-label">Monto</label>
-                <input type="number" step="0.01" name="monto" class="form-control" value="<?php echo htmlspecialchars($config['monto']); ?>" required>
-              </div>
-              <button type="submit" name="actualizar" class="btn btn-warning">Actualizar Configuración</button>
-              <a href="configuracion_pagos.php" class="btn btn-secondary">Cancelar</a>
-            </form>
+          
           </div>
-          <?php include 'footer.php'; ?>
+          <?php include '../footer.php'; ?>
           <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-          <script src="script.js"></script>
+          <script src="../js/script.js"></script>
         </body>
         </html>
         <?php
@@ -120,7 +111,7 @@ $resultList = mysqli_query($conn, $sqlList);
   <title>Configuración de Pagos - CRUD - Ciencias Artes y Metaeducación San José</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
   <?php include 'menu.php'; ?>
@@ -135,37 +126,7 @@ $resultList = mysqli_query($conn, $sqlList);
       <div class="alert alert-success"><?php echo $success_message; ?></div>
     <?php endif; ?>
     
-    <!-- Formulario para insertar nueva configuración -->
-    <div class="card mb-4">
-      <div class="card-header">Insertar Nueva Configuración</div>
-      <div class="card-body">
-        <form action="configuracion_pagos.php" method="POST">
-          <div class="row mb-3">
-            <div class="col">
-              <label for="nivel" class="form-label">Nivel</label>
-              <select name="nivel" class="form-select" required>
-                <option value="">Seleccione un nivel</option>
-                <option value="universidad">Universidad</option>
-                <option value="preparatoria">Preparatoria</option>
-              </select>
-            </div>
-            <div class="col">
-              <label for="tiene_beca" class="form-label">¿Tiene Beca?</label>
-              <div class="form-check">
-                <input type="checkbox" name="tiene_beca" class="form-check-input" id="tiene_beca">
-                <label class="form-check-label" for="tiene_beca">Sí</label>
-              </div>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="monto" class="form-label">Monto</label>
-            <input type="number" step="0.01" name="monto" class="form-control" required>
-          </div>
-          <button type="submit" name="guardar" class="btn btn-primary">Guardar Configuración</button>
-        </form>
-      </div>
-    </div>
-    
+   
     <!-- Lista de Configuraciones -->
     <div class="card">
       <div class="card-header">Lista de Configuración de Pagos</div>
@@ -197,8 +158,8 @@ $resultList = mysqli_query($conn, $sqlList);
     </div>
     
   </div>
-  <?php include 'footer.php'; ?>
+  <?php include '../footer.php'; ?>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="script.js"></script>
+  <script src="../js/script.js"></script>
 </body>
 </html>

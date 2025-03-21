@@ -1,6 +1,11 @@
 <?php
 // usuarios_crud.php
-
+session_start();
+// Verifica que el usuario esté autenticado y sea alumno
+if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] != 'administrador') {
+    header("Location: ../login/login.php");
+    exit;
+}
 require_once '../db_connection.php';
 
 $error_message   = "";

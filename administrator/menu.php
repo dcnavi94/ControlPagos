@@ -23,7 +23,10 @@
           <a class="nav-link" href="historialpagos_crud.php">Historial de Pagos</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="configuracion_pagos.php">Configuración Pagos</a>
+          <a class="nav-link" href="configuracion_pagos.php">Beca</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="Reporte.php">Reporte</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="../login/logout.php">Cerrar Sesión</a>

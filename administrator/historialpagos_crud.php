@@ -1,6 +1,12 @@
 <?php
+session_start();
+// Verifica que el usuario esté autenticado y sea alumno
+if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] != 'administrador') {
+    header("Location: ../login/login.php");
+    exit;
+}
 // historialpagos_crud.php
-require_once 'db_connection.php';
+require_once '../db_connection.php';
 
 $error_message   = "";
 $success_message = "";
@@ -165,7 +171,7 @@ $resultList = mysqli_query($conn, $sqlList);
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- CSS Personalizado -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
   <!-- Incluir menú -->
@@ -268,8 +274,8 @@ $resultList = mysqli_query($conn, $sqlList);
     </div>
     
   </div>
-  <?php include 'footer.php'; ?>
+  <?php include '../footer.php'; ?>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="script.js"></script>
+  <script src="../js/script.js"></script>
 </body>
 </html>
