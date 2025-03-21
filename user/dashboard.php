@@ -23,7 +23,7 @@ $resultPagos = mysqli_query($conn, $sqlPagos);
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- CSS Personalizado -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../css/styles.css">
   <style>
     html, body {
         height: 100%;
@@ -101,6 +101,6 @@ $resultPagos = mysqli_query($conn, $sqlPagos);
 
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="script.js"></script>
+  <script src="../js/script.js"></script>
 </body>
 </html>

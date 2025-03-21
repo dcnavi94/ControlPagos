@@ -2,11 +2,16 @@
 session_start();
 // Verifica que el usuario esté autenticado y sea alumno
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] != 'alumno') {
-    header("Location: login.php");
+    header("Location: ../login/login.php");
     exit;
 }
 
-require_once 'db_connection.php';
+require_once '../db_connection.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
+
+
 
 // Verificar que se haya pasado el id del pago
 if (!isset($_GET['id_pago'])) {
@@ -26,8 +31,15 @@ if (!$resultPago || mysqli_num_rows($resultPago) == 0) {
 $pago = mysqli_fetch_assoc($resultPago);
 
 // Configuración de PayPal
-$clientId = "ATP4BHRGpdnC0lembbaZT8GOcOA0NJ0KYUvVXgLwZYU1fxNC2XsyC0KZT2J5fGbet7F7s-qiO9uKLL1O";
-$clientSecret = "EHkXhOBMablcC3jN1lTVAYUn_sS0sPfRHQeF4Rm2qOz2zPOchQL9fMXfPMagcq1n9-R0QKQjj_h-329Y"; // Reemplaza por tu Client Secret real
+//$clientId = "ATP4BHRGpdnC0lembbaZT8GOcOA0NJ0KYUvVXgLwZYU1fxNC2XsyC0KZT2J5fGbet7F7s-qiO9uKLL1O";
+//$clientSecret = "EHkXhOBMablcC3jN1lTVAYUn_sS0sPfRHQeF4Rm2qOz2zPOchQL9fMXfPMagcq1n9-R0QKQjj_h-329Y"; // Reemplaza por tu Client Secret real
+// Configuración de PayPal
+$clientId = $_ENV['PAYPAL_CLIENT_ID'] ?? getenv('PAYPAL_CLIENT_ID');
+$clientSecret = $_ENV['PAYPAL_CLIENT_SECRET'] ?? getenv('PAYPAL_CLIENT_SECRET');
+
+if (!$clientId || !$clientSecret) {
+    die("Error: PAYPAL_CLIENT_ID o PAYPAL_CLIENT_SECRET no están definidos.");
+}
 
 // URL de los endpoints de Sandbox de PayPal
 $oauthUrl = "https://api-m.sandbox.paypal.com/v1/oauth2/token";

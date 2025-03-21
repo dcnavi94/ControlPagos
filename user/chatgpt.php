@@ -1,13 +1,18 @@
- <?php
-// chatgpt.php
+<?php
+// user/chatgpt.php
+
+// Cargar Composer y Dotenv
+require __DIR__ . '/../vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Se recibe la solicitud JSON
     $data = json_decode(file_get_contents('php://input'), true);
     $prompt = $data['prompt'] ?? '';
 
-    // Coloca aquí tu API Key de OpenAI
-    $api_key = getenv('OPENAI_API_KEY');
+    // Obtener la API Key de OpenAI desde el entorno
+    $api_key = $_ENV['OPENAI_API_KEY'];
 
     $url = 'https://api.openai.com/v1/chat/completions';
 
